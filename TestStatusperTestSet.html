@@ -37,24 +37,12 @@
             
                 launch: function() {
                     
-                    var TestSetStore;
-                    var TestResultStore;
-                    store = Ext.data.StoreManager.lookup('TestSetStorer');
-                    if (store !== undefined) {
-                        store.removeAll();
-                    }
-                    store = Ext.data.StoreManager.lookup('TestResultStorer');
-                    if (store !== undefined) {
-                        store.removeAll();
-                    }
-                    store = Ext.data.StoreManager.lookup('TestSummaryStore');
-                    if (store !== undefined) {
-                        store.removeAll();
-                    }
                     this._testSummary = [];
                     this._testResultList = [];
                     this._testSetTestList = [];
-
+                    var TestSetStore;
+                    var TestResultStore;
+                    
                     this.down('#iterationFilter').add({
                         xtype: 'rallyiterationcombobox',
                         itemId: 'iterationComboBox',
@@ -67,6 +55,13 @@
                 },
 
                 _queryForTestSets: function() {
+
+                    //if loading new iteration, destroy existing grids
+                    if (this._summaryGrid !== undefined) {
+                        this._summaryGrid.destroy();
+                        this._Grid.destroy();
+                        this._Grid2.destroy();
+                    }
 
                     TestSetStore = Ext.create('Rally.data.WsapiDataStore', {
                         model: 'TestSet',
@@ -361,6 +356,17 @@
                             },
                             {
                                 text: 'Verdict', dataIndex: 'resVerdict', flex: 1,
+                                renderer: function(value, meta, record) {
+                                    var newvalue;
+                                    if (value === 'Fail') {
+                                      newvalue = "<span style='color:red;font-weight:bold' >"+value+"</span>";
+                                    } else if (value === 'Pass') {
+                                      newvalue = "<span style='color:green;font-weight:bold' >"+value+"</span>";
+                                    } else {
+                                      newvalue = "<span style='color:gray;font-weight:bold' >"+value+"</span>";
+                                    }
+                                    return newvalue;
+                                  }
                             },
                             {
                                 text: 'Tester Name', dataIndex: 'resTester', flex: 2
@@ -426,7 +432,7 @@
 
     <style type="text/css">
     </style>
-    
+
 </head>
 <body></body>
 </html>
