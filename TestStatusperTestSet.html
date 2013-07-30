@@ -3,7 +3,7 @@
 <head>
     <title>Test Status per Test Set</title>
         <meta name="Name" content="Test Status per Test Set" />
-        <meta name="Version" content="1.1" />
+        <meta name="Version" content="1.2" />
         <meta name="Vendor" content="Rally Software" />
         <meta name="Author" content="Joel Krooswyk" />
 
@@ -19,11 +19,7 @@
             Ext.define('CustomApp', {
                 extend: 'Rally.app.App',
                 componentCls: 'app',
-                title: 'Iteration Copy Panel',
-                //layout: {
-                //    type: 'vbox',
-                //    align: 'center'
-                //},
+                title: 'Test Status Panel',
                 items: [
                     {
                         xtype: 'container',
@@ -151,29 +147,26 @@
                     });
 
                     //Eliminate tests run more than once
-                    DeleteArray = [];
+                    resultsDeleteArray = [];
                     Ext.Array.each(that._testResultList, function(record, index1) {
                         Ext.Array.each(that._testResultList, function(otherrecord, index2) {
                             if ((record.resID == otherrecord.resID) && (record.resSetID == otherrecord.resSetID) && (record.resultID != otherrecord.resultID)) {
                                 if (record.resDate > otherrecord.resDate) {
-                                    DeleteArray.push(index2);
+                                    resultsDeleteArray.push(index2);
                                 } 
                             }
                         });
                     });
-                    Ext.Array.each(DeleteArray, function(record,index) {
-
-                    });
 
                     //Remove older items from the results list 
-                    DeleteArray.sort();
-                    DeleteArray.reverse();
-                    for (var i=0; i<DeleteArray.length; i++) {
-                        if (DeleteArray[i] == DeleteArray[i+1]) {
-                            DeleteArray.splice(i, 1);
+                    resultsDeleteArray.sort();
+                    resultsDeleteArray.reverse();
+                    for (var i=0; i<resultsDeleteArray.length; i++) {
+                        if (resultsDeleteArray[i] == resultsDeleteArray[i+1]) {
+                            resultsDeleteArray.splice(i, 1);
                         }
                     }
-                    Ext.Array.each(DeleteArray, function(spliceID) {
+                    Ext.Array.each(resultsDeleteArray, function(spliceID) {
                         that._testResultList.splice(spliceID, 1);
                     });
 
@@ -287,7 +280,7 @@
                     //Need to find tests already run by looking at current results and comparing to complete list
                     var DeleteArray = [];
                     var numTotalTests = that._testSetTestList;
-                    var numTotalTests = numTotalTests.length;
+                    numTotalTests = numTotalTests.length;
                     Ext.Array.each(that._testResultList, function(record, index1) {
                         Ext.Array.each(that._testSetTestList, function(otherrecord, index2) {
                             if ((record.resID == otherrecord.resID) && (record.resSetID == otherrecord.resSetID)) {
@@ -297,7 +290,6 @@
                     });
 
                     //Remove items from the complete list to just leave unrun tests
-                    DeleteArray.sort();
                     DeleteArray.reverse();
                     Ext.Array.each(DeleteArray, function(spliceID) {
                         that._testSetTestList.splice(spliceID, 1);
@@ -340,7 +332,7 @@
                         enableEditing: true,
                         columnCfgs: [
                             { 
-                                text: 'Test Set ID', dataIndex: 'TestSetID' , flex: 1,
+                                text: 'Set ID', dataIndex: 'TestSetID' , flex: 1,
                                 renderer: function(value, meta, record) {
                                     var proj = record.get('ProjectObj');
                                     var setID = record.get('TestSetObj');
@@ -349,21 +341,21 @@
                                 }
                             },
                             {
-                                text: 'Set Name', dataIndex: 'TestSetName', flex: 2
+                                text: 'Set Name', dataIndex: 'TestSetName', flex: 3
                             },
                             {
-                                text: 'Percent RUN',
+                                text: 'EXECUTION',
                                 xtype: 'templatecolumn',
-                                flex: 1,
+                                flex: 2,
                                 tpl: Ext.create('Rally.ui.renderer.template.PercentDoneTemplate', 
                                 {
                                     percentDoneName: 'PercentComplete'
                                 })
                             },
                             {
-                                text: 'Percent PASS',
+                                text: 'PASSING',
                                 xtype: 'templatecolumn',
-                                flex: 1,
+                                flex: 2,
                                 tpl: Ext.create('Rally.ui.renderer.template.PercentDoneTemplate', 
                                 {
                                     percentDoneName: 'PercentPass'
@@ -379,7 +371,7 @@
                                 text: 'Other', dataIndex: 'Other', flex: 1
                             },
                             {
-                                text: 'Total Tests to Run', dataIndex: 'Total', flex: 1
+                                text: 'Set Total', dataIndex: 'Total', flex: 1
                             }
 
                         ]
