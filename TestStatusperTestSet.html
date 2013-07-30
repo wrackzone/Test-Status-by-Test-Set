@@ -3,7 +3,7 @@
 <head>
     <title>Test Status per Test Set</title>
         <meta name="Name" content="Test Status per Test Set" />
-        <meta name="Version" content="1.0" />
+        <meta name="Version" content="1.1" />
         <meta name="Vendor" content="Rally Software" />
         <meta name="Author" content="Joel Krooswyk" />
 
@@ -112,6 +112,10 @@
                             operator : '=',
                             value    : this.down('#iterationComboBox').getRecord().data.Name
                         }],
+                        //sorters: [{
+                        //        property: 'TestSet',
+                        //        direction: 'ASC'
+                        //}],
                         fetch: [
                             'TestSet','FormattedID','TestCase','Date','Verdict','Tester','ObjectID','Project'
                         ],
@@ -130,20 +134,53 @@
 
                     Ext.Array.each(testrecorddata, function(record) {
                         var datevar = record.get('Date');
-                        dateManip = datevar.toDateString();
 
                         that._testResultList.push({
                                 resID: record.get('TestCase').FormattedID,
                                 resName: record.get('TestCase')._refObjectName,
                                 resObject: record.get('TestCase').ObjectID,
                                 resVerdict: record.get('Verdict'),
-                                resDate: dateManip,
+                                resDate: datevar,
                                 resTester: record.get('Tester')._refObjectName,
                                 resSetID: record.get('TestSet').FormattedID,
                                 resSet: record.get('TestSet')._refObjectName,
                                 resSetObject: record.get('TestSet').ObjectID,
-                                resSetProject: record.get('TestSet').Project.ObjectID                        
+                                resSetProject: record.get('TestSet').Project.ObjectID,
+                                resultID: record.get('ObjectID')
                         });
+                    });
+
+                    //Eliminate tests run more than once
+                    DeleteArray = [];
+                    Ext.Array.each(that._testResultList, function(record, index1) {
+                        Ext.Array.each(that._testResultList, function(otherrecord, index2) {
+                            if ((record.resID == otherrecord.resID) && (record.resSetID == otherrecord.resSetID) && (record.resultID != otherrecord.resultID)) {
+                                if (record.resDate > otherrecord.resDate) {
+                                    DeleteArray.push(index2);
+                                } 
+                            }
+                        });
+                    });
+                    Ext.Array.each(DeleteArray, function(record,index) {
+
+                    });
+
+                    //Remove older items from the results list 
+                    DeleteArray.sort();
+                    DeleteArray.reverse();
+                    for (var i=0; i<DeleteArray.length; i++) {
+                        if (DeleteArray[i] == DeleteArray[i+1]) {
+                            DeleteArray.splice(i, 1);
+                        }
+                    }
+                    Ext.Array.each(DeleteArray, function(spliceID) {
+                        that._testResultList.splice(spliceID, 1);
+                    });
+
+                    //clean up dates in results list
+                    Ext.Array.each(that._testResultList, function(record, index1) {
+                        datevar = record.resDate; 
+                        record.resDate = datevar.toDateString();
                     });
 
                     //create test set list
@@ -158,6 +195,23 @@
                             var val2 = TestSetList[testindex - 1];
                             if (val1 !== val2) {
                                 TestSetList.push(record.resSetID);
+                                testindex++;
+                            }
+                        }
+                    });
+
+                    //create test set name list
+                    var TestSetNameList =[];
+                    var testindex = 0;
+                    Ext.Array.each(that._testSetTestList, function(record, index) {
+                        if(index == 0) {
+                            TestSetNameList.push(record.resSet);
+                            testindex = 1;
+                        } else {
+                            var val1 = record.resSet;
+                            var val2 = TestSetNameList[testindex - 1];
+                            if (val1 !== val2) {
+                                TestSetNameList.push(record.resSet);
                                 testindex++;
                             }
                         }
@@ -230,7 +284,7 @@
                         testOtherCounters = 0;
                     });
 
-                    //Need to find tests altready run by looking at current results and comparing to complete list
+                    //Need to find tests already run by looking at current results and comparing to complete list
                     var DeleteArray = [];
                     var numTotalTests = that._testSetTestList;
                     var numTotalTests = numTotalTests.length;
@@ -243,6 +297,7 @@
                     });
 
                     //Remove items from the complete list to just leave unrun tests
+                    DeleteArray.sort();
                     DeleteArray.reverse();
                     Ext.Array.each(DeleteArray, function(spliceID) {
                         that._testSetTestList.splice(spliceID, 1);
@@ -251,22 +306,22 @@
                     //sum total test status
                     var numTestsNotRun = that._testSetTestList;
                     numTestsNotRun = numTestsNotRun.length;
-                    testingPercentComplete = 100 - ((numTestsNotRun/numTotalTests)*100);
-                    //console.log(numTestsNotRun);
-                    //console.log(numTotalTests);
-                    //console.log(testingPercentComplete);
+                    testingPercentComplete = 100 - ((passTestSetCounts/numTotalTests)*100);
 
                     //get the summary data out there for results
                     that._testSummary = [];
                     TestSetList.forEach(function(record, index) {
                         var percentComplete = (((passTestSetCounts[index] + failTestSetCounts[index] + otherTestSetCounts[index])) / totalTestSetCounts[index]);
+                        var testingPercentPass = (passTestSetCounts[index]/totalTestSetCounts[index]);
                         that._testSummary.push({
                             TestSetID: TestSetList[index],
+                            TestSetName: TestSetNameList[index],
                             Passed: passTestSetCounts[index],
                             Failed: failTestSetCounts[index],
                             Other: otherTestSetCounts[index],
                             Total: totalTestSetCounts[index],
                             PercentComplete: percentComplete,
+                            PercentPass: testingPercentPass,
                             ProjectObj: TestSetObjList[index],
                             TestSetObj: TestSetObjList2[index]
                         });
@@ -294,11 +349,24 @@
                                 }
                             },
                             {
-                                text: 'Percent Complete',
+                                text: 'Set Name', dataIndex: 'TestSetName', flex: 2
+                            },
+                            {
+                                text: 'Percent RUN',
                                 xtype: 'templatecolumn',
+                                flex: 1,
                                 tpl: Ext.create('Rally.ui.renderer.template.PercentDoneTemplate', 
                                 {
                                     percentDoneName: 'PercentComplete'
+                                })
+                            },
+                            {
+                                text: 'Percent PASS',
+                                xtype: 'templatecolumn',
+                                flex: 1,
+                                tpl: Ext.create('Rally.ui.renderer.template.PercentDoneTemplate', 
+                                {
+                                    percentDoneName: 'PercentPass'
                                 })
                             },
                             {
@@ -308,7 +376,7 @@
                                 text: 'Failed', dataIndex: 'Failed', flex: 1
                             },
                             {
-                                text: 'Other (Blocked, etc)', dataIndex: 'Other', flex: 1
+                                text: 'Other', dataIndex: 'Other', flex: 1
                             },
                             {
                                 text: 'Total Tests to Run', dataIndex: 'Total', flex: 1
@@ -356,7 +424,7 @@
                                 text: 'Test Name', dataIndex: 'resName', flex: 2
                             },
                             {
-                                text: 'Verdict', dataIndex: 'resVerdict', flex: 1,
+                                text: 'Last Verdict', dataIndex: 'resVerdict', flex: 1,
                                 renderer: function(value, meta, record) {
                                     var newvalue;
                                     if (value === 'Fail') {
