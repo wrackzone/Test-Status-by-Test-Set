@@ -3,7 +3,7 @@
 <head>
     <title>Test Status per Test Set by Iteration</title>
         <meta name="Name" content="Test Status per Test Set by Iteration" />
-        <meta name="Version" content="1.3" />
+        <meta name="Version" content="1.4" />
         <meta name="Vendor" content="Rally Software" />
         <meta name="Author" content="Joel Krooswyk" />
 
@@ -320,8 +320,8 @@ console.log(TestSetObjList2);
                     //get the summary data out there for results
                     that._testSummary = [];
                     TestSetList.forEach(function(record, index) {
-                        var percentComplete = (((passTestSetCounts[index] + failTestSetCounts[index] + otherTestSetCounts[index])) / totalTestSetCounts[index]);
-                        var testingPercentPass = (passTestSetCounts[index]/totalTestSetCounts[index]);
+                        var percentComplete = (((passTestSetCounts[index] + failTestSetCounts[index] + blockedTestSetCounts[index] + errorTestSetCounts[index] + otherTestSetCounts[index])) / totalTestSetCounts[index]);
+                        var testingPercentPass = (passTestSetCounts[index]/((passTestSetCounts[index] + failTestSetCounts[index] + blockedTestSetCounts[index] + errorTestSetCounts[index] + otherTestSetCounts[index]))) || 0;
                         that._testSummary.push({
                             TestSetID: TestSetList[index],
                             TestSetName: TestSetNameList[index],
