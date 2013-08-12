@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Status per Test Set</title>
-        <meta name="Name" content="Test Status per Test Set" />
+    <title>Test Status per Test Set by Iteration</title>
+        <meta name="Name" content="Test Status per Test Set by Iteration" />
         <meta name="Version" content="1.3" />
         <meta name="Vendor" content="Rally Software" />
         <meta name="Author" content="Joel Krooswyk" />
@@ -209,7 +209,7 @@
                             }
                         }
                     });
-
+console.log(TestSetObjList2);
                     //create test set name list
                     var TestSetNameList =[];
                     var testindex = 0;
@@ -222,8 +222,9 @@
                             var val2 = TestSetNameList[testindex - 1];
                             var val3 = record.resSetObject;
                             var val4 = TestSetObjList2[testindex - 1]
-
+                            //console.log ("val1 = " + val1 + ", val2 = " + val2 + ", val3 = " + val3 + ", val4 = " + val4);
                             if ((val1 !== val2) || (val3 !== val4)) {
+                                //console.log("hit!");
                                 TestSetNameList.push(record.resSet);
                                 testindex++;
                             }
@@ -256,9 +257,13 @@
                     //obtain test outcome counts for each test set
                     var passTestSetCounts = [];
                     var failTestSetCounts = [];
+                    var blockedTestSetCounts = [];
+                    var errorTestSetCounts = [];
                     var otherTestSetCounts =[];
                     var testPassCounters = 0;
                     var testFailCounters = 0;
+                    var testBlockedCounters = 0;
+                    var testErrorCounters = 0;
                     var testOtherCounters = 0;
                     TestSetList.forEach(function(record) {
                         Ext.Array.each(that._testResultList, function(testsetrecord) {
@@ -267,6 +272,10 @@
                                     testPassCounters++;
                                 } else if (testsetrecord.resVerdict == "Fail") {
                                     testFailCounters++;
+                                } else if (testsetrecord.resVerdict == "Blocked") {
+                                    testBlockedCounters++;
+                                } else if (testsetrecord.resVerdict == "Error") {
+                                    testErrorCounters++;
                                 } else {
                                     testOtherCounters++;
                                 }
@@ -274,9 +283,13 @@
                         });
                         passTestSetCounts.push(testPassCounters);
                         failTestSetCounts.push(testFailCounters);
+                        blockedTestSetCounts.push(testBlockedCounters);
+                        errorTestSetCounts.push(testErrorCounters);
                         otherTestSetCounts.push(testOtherCounters);
                         testPassCounters = 0;
                         testFailCounters = 0;
+                        testBlockedCounters = 0;
+                        testErrorCounters = 0;
                         testOtherCounters = 0;
                     });
 
@@ -286,13 +299,14 @@
                     numTotalTests = numTotalTests.length;
                     Ext.Array.each(that._testResultList, function(record, index1) {
                         Ext.Array.each(that._testSetTestList, function(otherrecord, index2) {
-                            if ((record.resID == otherrecord.resID) && (record.resSetID == otherrecord.resSetID)) {
+                            if ((record.resObject == otherrecord.resObject) && (record.resSetObject == otherrecord.resSetObject)) {
                                 DeleteArray.push(index2);
                             }
                         });
                     });
 
                     //Remove items from the complete list to just leave unrun tests
+                    DeleteArray.sort();
                     DeleteArray.reverse();
                     Ext.Array.each(DeleteArray, function(spliceID) {
                         that._testSetTestList.splice(spliceID, 1);
@@ -313,6 +327,8 @@
                             TestSetName: TestSetNameList[index],
                             Passed: passTestSetCounts[index],
                             Failed: failTestSetCounts[index],
+                            Blocked: blockedTestSetCounts[index],
+                            Error: errorTestSetCounts[index],
                             Other: otherTestSetCounts[index],
                             Total: totalTestSetCounts[index],
                             PercentComplete: percentComplete,
@@ -371,7 +387,13 @@
                                 text: 'Failed', dataIndex: 'Failed', flex: 1
                             },
                             {
-                                text: 'Other', dataIndex: 'Other', flex: 1
+                                text: 'Blocked', dataIndex: 'Blocked', flex: 1
+                            },
+                            {
+                                text: 'Error', dataIndex: 'Error', flex: 1
+                            },
+                            {
+                                text: 'Inconcl', dataIndex: 'Other', flex: 1
                             },
                             {
                                 text: 'Set Total', dataIndex: 'Total', flex: 1
@@ -426,6 +448,10 @@
                                       newvalue = "<span style='color:red;font-weight:bold' >"+value+"</span>";
                                     } else if (value === 'Pass') {
                                       newvalue = "<span style='color:green;font-weight:bold' >"+value+"</span>";
+                                    } else if (value === 'Blocked') {
+                                      newvalue = "<span style='color:orange;font-weight:bold' >"+value+"</span>";
+                                    } else if (value === 'Error') {
+                                      newvalue = "<span style='color:orange;font-weight:bold' >"+value+"</span>";
                                     } else {
                                       newvalue = "<span style='color:gray;font-weight:bold' >"+value+"</span>";
                                     }
