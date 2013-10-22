@@ -3,7 +3,7 @@
 <head>
     <title>Test Status per Test Set by Iteration</title>
         <meta name="Name" content="Test Status per Test Set by Iteration" />
-        <meta name="Version" content="1.4" />
+        <meta name="Version" content="1.6" />
         <meta name="Vendor" content="Rally Software" />
         <meta name="Author" content="Joel Krooswyk" />
 
@@ -158,14 +158,18 @@
                         });
                     });
 
-                    //Remove older items from the results list 
-                    resultsDeleteArray.sort();
+                    //Remove older items from the results list  
+                    resultsDeleteArray.sort(sortNumber);
                     resultsDeleteArray.reverse();
+
                     for (var i=0; i<resultsDeleteArray.length; i++) {
                         if (resultsDeleteArray[i] == resultsDeleteArray[i+1]) {
-                            resultsDeleteArray.splice(i, 1);
+                            delete resultsDeleteArray[i];
                         }
                     }
+
+                    resultsDeleteArray = resultsDeleteArray.filter(function(n){return n});
+
                     Ext.Array.each(resultsDeleteArray, function(spliceID) {
                         that._testResultList.splice(spliceID, 1);
                     });
@@ -209,7 +213,7 @@
                             }
                         }
                     });
-console.log(TestSetObjList2);
+//console.log(TestSetObjList2);
                     //create test set name list
                     var TestSetNameList =[];
                     var testindex = 0;
@@ -513,6 +517,11 @@ console.log(TestSetObjList2);
                 }
                 
             });
+
+        function sortNumber(a,b)
+            {
+                return a - b;
+            }
 
             Rally.launchApp('CustomApp', {
                 name: 'Test Set Results per Iteration'
