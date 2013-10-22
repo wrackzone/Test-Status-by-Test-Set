@@ -3,7 +3,7 @@
 <head>
     <title>Test Status per Test Set by Iteration</title>
         <meta name="Name" content="Test Status per Test Set by Iteration" />
-        <meta name="Version" content="1.6" />
+        <meta name="Version" content="1.4" />
         <meta name="Vendor" content="Rally Software" />
         <meta name="Author" content="Joel Krooswyk" />
 
@@ -310,8 +310,17 @@
                     });
 
                     //Remove items from the complete list to just leave unrun tests
-                    DeleteArray.sort();
+                    DeleteArray.sort(sortNumber);
                     DeleteArray.reverse();
+                    
+                    for (var i=0; i<DeleteArray.length; i++) {
+                        if (DeleteArray[i] == DeleteArray[i+1]) {
+                            delete DeleteArray[i];
+                        }
+                    }
+                    
+                    DeleteArray = DeleteArray.filter(function(n){return n});
+                    
                     Ext.Array.each(DeleteArray, function(spliceID) {
                         that._testSetTestList.splice(spliceID, 1);
                     });
