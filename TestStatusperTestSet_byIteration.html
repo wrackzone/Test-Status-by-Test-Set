@@ -36,6 +36,9 @@
 						},
 						items: [
 						   {
+                            xtype: 'container',
+                            itemId: 'iterationFilter'
+                        }, {
 								xtype:'rallybutton',
 								text: 'Print Summary',
 								handler: function() {
@@ -90,12 +93,18 @@
                     var TestResultStore;
                     scope: this;
 					
-                     this._queryForTestSets();
-					 
-                     
-                   
+                    this.down('#iterationFilter').add({
+                        xtype: 'rallyiterationcombobox',
+                        itemId: 'iterationComboBox',
+                        listeners: {
+                            change: this._queryForTestSets,
+                            ready: this._queryForTestSets,
+                            scope: this
+                        }
+                    });;
                 },
-				_printSummary: function() {
+				
+                _printSummary: function() {
 						var myData = this._testSummary;  
 						var htmlTable ='<table>';
 						htmlTable +='<width="100%">';   
@@ -179,7 +188,16 @@
 							printwindow.print();
 							printwindow.close();
 						},
+                
                 _queryForTestSets: function() {
+                
+                    //if loading new iteration, destroy existing grids
+                    if (this._summaryGrid !== undefined) {
+                        this._summaryGrid.destroy();
+                        this._Grid.destroy();
+                        this._Grid2.destroy();
+                    }
+                    
                     TestSetStore = Ext.create('Rally.data.WsapiDataStore', {
                         model: 'TestSet',
                         autoLoad: true,
@@ -192,7 +210,11 @@
                             property : 'Project',
                             operator : '=',
                             value: this.getContext().getDataContext().project
-                        },],
+                        },{
+                            property: 'Iteration.Name',
+                            operator: '=',
+                            value: this.down('#iterationComboBox').getRecord().data.Name
+                        }],
                         fetch: [
                             'FormattedID','Name','TestCases', 'ObjectID', 'Project'
                         ],
@@ -210,6 +232,7 @@
                     that = this;
                     that._testSetTestList = [];
 					that._testSetKeyTestList = [];
+                    console.log(testsetdata);
                     
                     Ext.Array.each(testsetdata, function(record) {
                         Ext.Array.each(record.get('TestCases'), function(name, index) {
@@ -255,6 +278,10 @@
                             projectScopeDown:true
 						},
                         filters: [ {
+                            property : 'TestSet.Iteration.Name',
+                            operator : '=',
+                            value    : this.down('#iterationComboBox').getRecord().data.Name
+                        },{
                             property : 'TestSet.Project',
                             operator : '=',
                             value: this.getContext().getDataContext().project
